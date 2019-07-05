@@ -81,6 +81,8 @@
     "@jupyterlab/notebook-extension": "^1.0.0",
     "@jupyterlab/observables": "^2.2.0",
     "@jupyterlab/outputarea": "^1.0.0",
+    "@jupyterlab/outputconsole": "^1.0.0",
+    "@jupyterlab/outputconsole-extension": "^1.0.0",
     "@jupyterlab/pdf-extension": "^1.0.0",
     "@jupyterlab/rendermime": "^1.0.0",
     "@jupyterlab/rendermime-extension": "^1.0.0",

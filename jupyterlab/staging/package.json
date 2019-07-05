@@ -65,6 +65,7 @@
     "@jupyterlab/vdom-extension": "^1.0.0",
     "@jupyterlab/vega4-extension": "^1.0.0",
     "@jupyterlab/vega5-extension": "^1.0.0",
+    "@jupyterlab/outputconsole-extension": "file:/Users/mbektas/Documents/dev/jupyterlab/packages/outputconsole-extension/jupyterlab-outputconsole-extension-1.0.0.tgz",
     "@phosphor/algorithm": "^1.1.3",
     "@phosphor/application": "^1.6.3",
     "@phosphor/commands": "^1.6.3",
@@ -150,7 +151,8 @@
       "@jupyterlab/theme-dark-extension": "",
       "@jupyterlab/theme-light-extension": "",
       "@jupyterlab/tooltip-extension": "",
-      "@jupyterlab/vdom-extension": ""
+      "@jupyterlab/vdom-extension": "",
+      "@jupyterlab/outputconsole-extension": ""
     },
     "mimeExtensions": {
       "@jupyterlab/javascript-extension": "",
