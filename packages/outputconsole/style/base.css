@@ -3,17 +3,17 @@
 | Distributed under the terms of the Modified BSD License.
 |----------------------------------------------------------------------------*/
 
-.lab-console-ext-widget {
+.lab-output-console-widget {
   overflow-y: auto;
 }
 
-.lab-console-log-line {
+.lab-output-console-line {
   border-bottom: 1px solid #202020;
   padding: 2px;
   font-size: 13px;
 }
 
-.lab-console-log-line .log-count {
+.lab-output-console-line .log-count {
   display: inline-block;
   width: 30px;
   padding-right: 3px;
@@ -21,14 +21,14 @@
   text-align: right;
 }
 
-.lab-console-log-line .log-time {
+.lab-output-console-line .log-time {
   display: inline-block;
   width: 90px;
   padding-left: 3px;
   color: #949494;
 }
 
-.lab-console-log-line .log-content {
+.lab-output-console-line .log-content {
   display: inline-block;
   color: #eeeeee;
 }

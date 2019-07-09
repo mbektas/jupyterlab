@@ -8,36 +8,27 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
+import { SessionManager, KernelMessage } from '@jupyterlab/services';
+
 import { IMainMenu } from '@jupyterlab/mainmenu';
 
-import {
-  IJupyterLabOutputConsole,
-  JupyterLabOutputConsole,
-  JupyterLabOutputConsoleExtWidget
-} from '@jupyterlab/outputconsole';
+import { IOutputConsole, OutputConsoleWidget } from '@jupyterlab/outputconsole';
 
-/**
- * The HTML file handler extension.
- */
-const outputConsolePlugin: JupyterFrontEndPlugin<IJupyterLabOutputConsole> = {
+const outputConsolePlugin: JupyterFrontEndPlugin<IOutputConsole> = {
   activate: activateOutputConsole,
   id: '@jupyterlab/outputconsole-extension:plugin',
-  provides: IJupyterLabOutputConsole,
+  provides: IOutputConsole,
   requires: [IMainMenu],
   autoStart: true
 };
 
-/**
- * Activate the OutputConsole extension.
- */
 function activateOutputConsole(
   app: JupyterFrontEnd,
   mainMenu: IMainMenu
-): IJupyterLabOutputConsole {
-  console.log('JupyterLab extension jupyterlab_output_console is activated!');
+): IOutputConsole {
+  console.log('JupyterLab extension @jupyterlab/outputconsole is activated!');
 
-  const logConsole = new JupyterLabOutputConsole();
-  const widget = new JupyterLabOutputConsoleExtWidget(logConsole);
+  const widget = new OutputConsoleWidget();
 
   const addWidgetToMainArea = () => {
     app.shell.add(widget, 'main', {
@@ -49,15 +40,25 @@ function activateOutputConsole(
   };
 
   app.started.then(() => {
-    setTimeout(() => {
-      addWidgetToMainArea();
-    }, 2000);
+    // setTimeout(() => {
+    //   addWidgetToMainArea();
+    // }, 2000);
+
+    app.serviceManager.unhandledSessionIOPubMessage.connect(
+      (sender: SessionManager, msg: KernelMessage.IIOPubMessage) => {
+        if (!widget.isAttached) {
+          addWidgetToMainArea();
+        }
+
+        widget.outputConsole.logMessage(msg);
+      }
+    );
   });
 
-  const command: string = 'log:jlab-console-log';
+  const command: string = 'log:jlab-output-console';
 
   app.commands.addCommand(command, {
-    label: 'Console Log Output',
+    label: 'Output Console',
     execute: (args: any) => {
       if (widget.isAttached) {
         widget.close();
@@ -70,11 +71,27 @@ function activateOutputConsole(
     }
   });
 
+  setInterval(() => {
+    widget.outputConsole.logMessage({
+      msg_type: 'stream',
+      content: {
+        text: 'Mehmet'
+      }
+    });
+
+    widget.outputConsole.logMessage({
+      msg_type: 'display_data',
+      content: {
+        data: {
+          'text/html': '<span style="color:orange">Bektas</span>'
+        }
+      }
+    });
+  }, 20000);
+
   mainMenu.viewMenu.addGroup([{ command }]);
 
-  return logConsole;
+  return widget.outputConsole;
 }
-/**
- * Export the plugins as default.
- */
+
 export default outputConsolePlugin;

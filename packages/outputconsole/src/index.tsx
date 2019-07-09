@@ -17,16 +17,18 @@ import '../style/index.css';
 /**
  * The state manager token.
  */
-export const IJupyterLabOutputConsole = new Token<IJupyterLabOutputConsole>(
-  'jupyterlab:IJupyterLabOutputConsole'
+export const IOutputConsole = new Token<IOutputConsole>(
+  '@jupyterlab/outputconsole:IOutputConsole'
 );
 
 /**
  * An interface for a state manager.
  */
-export interface IJupyterLabOutputConsole extends JupyterLabOutputConsole {}
+export interface IOutputConsole {
+  logMessage(msg: any): void;
+}
 
-export class JupyterLabOutputConsole implements IDisposable {
+export class OutputConsole implements IDisposable, IOutputConsole {
   /**
    * Construct a new State Manager object.
    */
@@ -54,7 +56,7 @@ export class JupyterLabOutputConsole implements IDisposable {
     if (this._onMessageHandler) {
       this._onMessageHandler(msg);
     } else {
-      console.log(`IJupyterLabOutputConsole: ${msg}`);
+      console.log(`IOutputConsole: ${msg}`);
     }
   }
 
@@ -66,49 +68,56 @@ export class JupyterLabOutputConsole implements IDisposable {
   private _onMessageHandler: any;
 }
 
-export class JupyterLabOutputConsoleExtWidget extends Widget {
-  constructor(logConsole: JupyterLabOutputConsole) {
+export class OutputConsoleWidget extends Widget {
+  private _consoleView: OutputConsoleView = null;
+
+  constructor() {
     super();
 
     this.id = UUID.uuid4();
     this.title.closable = true;
-    this.title.label = 'Console Log Output';
-    this.addClass('lab-console-ext-widget');
+    this.title.label = 'Output Console';
+    this.addClass('lab-output-console-widget');
 
-    let consoleWidget = new JupyterLabOutputConsoleWidget(logConsole);
+    this._consoleView = new OutputConsoleView();
 
     let toolbar = new Toolbar();
     let button = new ToolbarButton({
       onClick: (): void => {
-        consoleWidget.clearMessages();
+        this._consoleView.clearMessages();
       },
       iconClassName: 'fa fa-trash',
       tooltip: 'Clear',
       label: 'Clear'
     });
     toolbar.addItem(name, button);
-    toolbar.addItem('jlab-log-clear', button);
+    toolbar.addItem('lab-output-console-clear', button);
 
     let layout = new BoxLayout();
     layout.addWidget(toolbar);
-    layout.addWidget(consoleWidget);
+    layout.addWidget(this._consoleView);
 
     BoxLayout.setStretch(toolbar, 0);
-    BoxLayout.setStretch(consoleWidget, 1);
+    BoxLayout.setStretch(this._consoleView, 1);
 
     this.layout = layout;
   }
+
+  get outputConsole(): IOutputConsole {
+    return this._consoleView.outputConsole;
+  }
 }
 
-class JupyterLabOutputConsoleWidget extends Widget {
+class OutputConsoleView extends Widget {
   private _logCounter: number = 0;
+  private _outputConsole: OutputConsole = null;
 
-  constructor(logConsole: JupyterLabOutputConsole) {
+  constructor() {
     super();
 
-    this.addClass('lab-console-ext-widget');
+    this._outputConsole = new OutputConsole();
 
-    logConsole.onMessage((msg: any) => {
+    this._outputConsole.onMessage((msg: any) => {
       const content =
         msg.msg_type === 'stream'
           ? msg.content.text
@@ -117,7 +126,7 @@ class JupyterLabOutputConsoleWidget extends Widget {
       const now = new Date();
       const logTime = now.toLocaleTimeString();
       const logLine = document.createElement('div');
-      logLine.className = 'lab-console-log-line';
+      logLine.className = 'lab-output-console-line';
       logLine.innerHTML = `<div class="log-count">${++this
         ._logCounter})</div><div class="log-time">${logTime}</div><div class="log-content">${content}</div>`;
 
@@ -127,6 +136,10 @@ class JupyterLabOutputConsoleWidget extends Widget {
         this.node.appendChild(logLine);
       }
     });
+  }
+
+  get outputConsole(): IOutputConsole {
+    return this._outputConsole;
   }
 
   clearMessages(): void {

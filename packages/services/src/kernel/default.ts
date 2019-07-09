@@ -110,6 +110,10 @@ export class DefaultKernel implements Kernel.IKernel {
     return this._unhandledMessage;
   }
 
+  get unhandledIOPubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
+    return this._unhandledIOPubMessage;
+  }
+
   /**
    * A signal emitted for any kernel message.
    *
@@ -1218,6 +1222,10 @@ export class DefaultKernel implements Kernel.IKernel {
         if (msg.channel !== 'iopub' && owned) {
           this._unhandledMessage.emit(msg);
         }
+
+        if (!owned && msg.channel === 'iopub') {
+          //  this._unhandledIOPubMessage.emit(msg as KernelMessage.IIOPubMessage);
+        }
       }
     }
     if (msg.channel === 'iopub') {
@@ -1251,6 +1259,14 @@ export class DefaultKernel implements Kernel.IKernel {
           await this._handleCommClose(msg as KernelMessage.ICommCloseMsg);
           break;
         default:
+          // redirect to outputconsole
+          let parentHeader = msg.parent_header as KernelMessage.IHeader;
+          let owned = parentHeader.session === this.clientId;
+          if (!owned) {
+            this._unhandledIOPubMessage.emit(
+              msg as KernelMessage.IIOPubMessage
+            );
+          }
           break;
       }
       // If the message was a status dead message, we might have disposed ourselves.
@@ -1320,6 +1336,10 @@ export class DefaultKernel implements Kernel.IKernel {
   private _iopubMessage = new Signal<this, KernelMessage.IIOPubMessage>(this);
   private _anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
   private _unhandledMessage = new Signal<this, KernelMessage.IMessage>(this);
+  private _unhandledIOPubMessage = new Signal<
+    this,
+    KernelMessage.IIOPubMessage
+  >(this);
   private _displayIdToParentIds = new Map<string, string[]>();
   private _msgIdToDisplayIds = new Map<string, string[]>();
   private _terminated = new Signal<this, void>(this);
