@@ -8,7 +8,9 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { SessionManager, KernelMessage } from '@jupyterlab/services';
+import { SessionManager, KernelMessage, Session } from '@jupyterlab/services';
+
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { IMainMenu } from '@jupyterlab/mainmenu';
 
@@ -18,39 +20,39 @@ const outputConsolePlugin: JupyterFrontEndPlugin<IOutputConsole> = {
   activate: activateOutputConsole,
   id: '@jupyterlab/outputconsole-extension:plugin',
   provides: IOutputConsole,
-  requires: [IMainMenu],
+  requires: [IMainMenu, IRenderMimeRegistry],
   autoStart: true
 };
 
 function activateOutputConsole(
   app: JupyterFrontEnd,
-  mainMenu: IMainMenu
+  mainMenu: IMainMenu,
+  rendermime: IRenderMimeRegistry
 ): IOutputConsole {
-  console.log('JupyterLab extension @jupyterlab/outputconsole is activated!');
-
-  const widget = new OutputConsoleWidget();
+  const outputConsoleWidget = new OutputConsoleWidget(rendermime);
 
   const addWidgetToMainArea = () => {
-    app.shell.add(widget, 'main', {
+    app.shell.add(outputConsoleWidget, 'main', {
       ref: '',
       mode: 'split-bottom'
     });
-    widget.update();
-    app.shell.activateById(widget.id);
+    outputConsoleWidget.update();
+    app.shell.activateById(outputConsoleWidget.id);
   };
 
   app.started.then(() => {
-    // setTimeout(() => {
-    //   addWidgetToMainArea();
-    // }, 2000);
-
     app.serviceManager.unhandledSessionIOPubMessage.connect(
       (sender: SessionManager, msg: KernelMessage.IIOPubMessage) => {
-        if (!widget.isAttached) {
-          addWidgetToMainArea();
-        }
+        sender
+          .findById((msg.header as any).sourceSession)
+          .then((session: Session.IModel) => {
+            console.log('SESSION', session.name);
+            if (!outputConsoleWidget.isAttached) {
+              addWidgetToMainArea();
+            }
 
-        widget.outputConsole.logMessage(msg);
+            outputConsoleWidget.outputConsole.logMessage(session.name, msg);
+          });
       }
     );
   });
@@ -60,38 +62,20 @@ function activateOutputConsole(
   app.commands.addCommand(command, {
     label: 'Output Console',
     execute: (args: any) => {
-      if (widget.isAttached) {
-        widget.close();
+      if (outputConsoleWidget.isAttached) {
+        outputConsoleWidget.close();
       } else {
         addWidgetToMainArea();
       }
     },
     isToggled: (): boolean => {
-      return widget.isAttached;
+      return outputConsoleWidget.isAttached;
     }
   });
 
-  setInterval(() => {
-    widget.outputConsole.logMessage({
-      msg_type: 'stream',
-      content: {
-        text: 'Mehmet'
-      }
-    });
-
-    widget.outputConsole.logMessage({
-      msg_type: 'display_data',
-      content: {
-        data: {
-          'text/html': '<span style="color:orange">Bektas</span>'
-        }
-      }
-    });
-  }, 20000);
-
   mainMenu.viewMenu.addGroup([{ command }]);
 
-  return widget.outputConsole;
+  return outputConsoleWidget.outputConsole;
 }
 
 export default outputConsolePlugin;

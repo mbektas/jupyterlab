@@ -1,3 +1,3 @@
-# @jupyterlab/htmlviewer
+# @jupyterlab/outputconsole
 
-A JupyterLab package which provides an HTML document viewer.
+JupyterLab - Output Console

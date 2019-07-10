@@ -5,56 +5,30 @@
 
 import { Widget, BoxLayout } from '@phosphor/widgets';
 
-import { UUID } from '@phosphor/coreutils';
-
-import { Token } from '@phosphor/coreutils';
-import { IDisposable } from '@phosphor/disposable';
+import { UUID, Token } from '@phosphor/coreutils';
 
 import { Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 
+import { nbformat } from '@jupyterlab/coreutils';
+
+import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
+
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
 import '../style/index.css';
 
-/**
- * The state manager token.
- */
 export const IOutputConsole = new Token<IOutputConsole>(
   '@jupyterlab/outputconsole:IOutputConsole'
 );
 
-/**
- * An interface for a state manager.
- */
 export interface IOutputConsole {
-  logMessage(msg: any): void;
+  logMessage(sender: string, msg: any): void;
 }
 
-export class OutputConsole implements IDisposable, IOutputConsole {
-  /**
-   * Construct a new State Manager object.
-   */
-  constructor() {}
-
-  /**
-   * Get whether the completion handler is disposed.
-   */
-  get isDisposed(): boolean {
-    return this._isDisposed;
-  }
-
-  /**
-   * Dispose of the resources used by the handler.
-   */
-  dispose(): void {
-    if (this.isDisposed) {
-      return;
-    }
-
-    this._isDisposed = true;
-  }
-
-  logMessage(msg: any) {
+export class OutputConsole implements IOutputConsole {
+  logMessage(sender: string, msg: any) {
     if (this._onMessageHandler) {
-      this._onMessageHandler(msg);
+      this._onMessageHandler(sender, msg);
     } else {
       console.log(`IOutputConsole: ${msg}`);
     }
@@ -64,14 +38,11 @@ export class OutputConsole implements IDisposable, IOutputConsole {
     this._onMessageHandler = handler;
   }
 
-  private _isDisposed = false;
   private _onMessageHandler: any;
 }
 
 export class OutputConsoleWidget extends Widget {
-  private _consoleView: OutputConsoleView = null;
-
-  constructor() {
+  constructor(rendermime: IRenderMimeRegistry) {
     super();
 
     this.id = UUID.uuid4();
@@ -79,14 +50,16 @@ export class OutputConsoleWidget extends Widget {
     this.title.label = 'Output Console';
     this.addClass('lab-output-console-widget');
 
-    this._consoleView = new OutputConsoleView();
+    this._consoleView = new OutputConsoleView(rendermime);
+    this._consoleView.update();
+    this._consoleView.activate();
 
     let toolbar = new Toolbar();
     let button = new ToolbarButton({
       onClick: (): void => {
         this._consoleView.clearMessages();
       },
-      iconClassName: 'fa fa-trash',
+      iconClassName: 'fa fa-ban clear-icon',
       tooltip: 'Clear',
       label: 'Clear'
     });
@@ -106,35 +79,65 @@ export class OutputConsoleWidget extends Widget {
   get outputConsole(): IOutputConsole {
     return this._consoleView.outputConsole;
   }
+
+  private _consoleView: OutputConsoleView = null;
 }
 
 class OutputConsoleView extends Widget {
-  private _logCounter: number = 0;
-  private _outputConsole: OutputConsole = null;
-
-  constructor() {
+  constructor(rendermime: IRenderMimeRegistry) {
     super();
+
+    this.node.style.overflowY = 'auto'; // TODO: use CSS class
 
     this._outputConsole = new OutputConsole();
 
-    this._outputConsole.onMessage((msg: any) => {
-      const content =
-        msg.msg_type === 'stream'
-          ? msg.content.text
-          : msg.content.data['text/html'];
+    this._outputConsole.onMessage((sender: string, msg: any) => {
+      if (
+        ![
+          'execute_result',
+          'display_data',
+          'stream',
+          'error',
+          'update_display_data'
+        ].includes(msg.header.msg_type)
+      ) {
+        return;
+      }
+
+      const output = msg.content as nbformat.IOutput;
+      output.output_type = msg.header.msg_type as nbformat.OutputType;
+
+      const outputView = new OutputArea({
+        rendermime: rendermime,
+        contentFactory: OutputArea.defaultContentFactory,
+        model: new OutputAreaModel()
+      });
+
+      outputView.update();
 
       const now = new Date();
       const logTime = now.toLocaleTimeString();
       const logLine = document.createElement('div');
       logLine.className = 'lab-output-console-line';
-      logLine.innerHTML = `<div class="log-count">${++this
-        ._logCounter})</div><div class="log-time">${logTime}</div><div class="log-content">${content}</div>`;
+      logLine.innerHTML = `
+        <div class="log-count">${++this._logCounter})</div>
+        <div class="log-header">
+          <div class="log-time">${logTime}</div>
+          <div class="log-sender">${sender}</div>
+        </div>
+        <div class="log-content"></div>`;
 
-      if (this.node.hasChildNodes()) {
-        this.node.insertBefore(logLine, this.node.childNodes[0]);
-      } else {
-        this.node.appendChild(logLine);
-      }
+      this.node.appendChild(logLine);
+
+      logLine.querySelector('.log-content').appendChild(outputView.node);
+
+      outputView.model.add(output);
+
+      this.node.scrollTo({
+        left: 0,
+        top: this.node.scrollHeight,
+        behavior: 'smooth'
+      });
     });
   }
 
@@ -148,4 +151,7 @@ class OutputConsoleView extends Widget {
     }
     this._logCounter = 0;
   }
+
+  private _logCounter: number = 0;
+  private _outputConsole: OutputConsole = null;
 }

@@ -355,6 +355,7 @@ export class DefaultSession implements Session.ISession {
     sender: Kernel.IKernel,
     msg: KernelMessage.IIOPubMessage
   ) {
+    (msg.header as any).sourceSession = this.id;
     this._unhandledIOPubMessage.emit(msg);
   }
 

@@ -8,6 +8,15 @@
   "references": [
     {
       "path": "../apputils"
+    },
+    {
+      "path": "../coreutils"
+    },
+    {
+      "path": "../outputarea"
+    },
+    {
+      "path": "../rendermime"
     }
   ]
 }

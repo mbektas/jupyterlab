@@ -1,3 +1,3 @@
-# @jupyterlab/htmlviewer-extension
+# @jupyterlab/outputconsole-extension
 
-An extension for JupyterLab which provides an entry point for the [@jupyterlab/htmlviewer](../htmlviewer) package.
+JupyterLab - Output Console Extension

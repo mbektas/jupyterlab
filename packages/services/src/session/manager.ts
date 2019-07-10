@@ -181,6 +181,10 @@ export class SessionManager implements Session.IManager {
     sender: Session.ISession,
     msg: KernelMessage.IIOPubMessage
   ) {
+    if ((msg as any).msg_id === this._lastMessageId) {
+      return;
+    }
+    this._lastMessageId = (msg as any).msg_id;
     this._unhandledIOPubMessage.emit(msg);
     console.log('SESSION UNHANDLED IOPUB', msg);
   }
@@ -406,6 +410,7 @@ export class SessionManager implements Session.IManager {
     this,
     KernelMessage.IIOPubMessage
   >(this);
+  private _lastMessageId: string;
 }
 
 /**

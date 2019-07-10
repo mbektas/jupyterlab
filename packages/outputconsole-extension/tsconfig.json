@@ -16,6 +16,9 @@
       "path": "../outputconsole"
     },
     {
+      "path": "../rendermime"
+    },
+    {
       "path": "../services"
     }
   ]

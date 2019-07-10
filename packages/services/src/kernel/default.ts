@@ -1185,6 +1185,10 @@ export class DefaultKernel implements Kernel.IKernel {
         console.error(error);
       });
 
+    if (msg.channel === 'iopub') {
+      this._unhandledIOPubMessage.emit(msg as KernelMessage.IIOPubMessage);
+    }
+
     // Emit the message receive signal
     this._anyMessage.emit({ msg, direction: 'recv' });
   };
@@ -1223,9 +1227,9 @@ export class DefaultKernel implements Kernel.IKernel {
           this._unhandledMessage.emit(msg);
         }
 
-        if (!owned && msg.channel === 'iopub') {
-          //  this._unhandledIOPubMessage.emit(msg as KernelMessage.IIOPubMessage);
-        }
+        // if (!owned && msg.channel === 'iopub') {
+        //   this._unhandledIOPubMessage.emit(msg as KernelMessage.IIOPubMessage);
+        // }
       }
     }
     if (msg.channel === 'iopub') {
@@ -1260,13 +1264,13 @@ export class DefaultKernel implements Kernel.IKernel {
           break;
         default:
           // redirect to outputconsole
-          let parentHeader = msg.parent_header as KernelMessage.IHeader;
-          let owned = parentHeader.session === this.clientId;
-          if (!owned) {
-            this._unhandledIOPubMessage.emit(
-              msg as KernelMessage.IIOPubMessage
-            );
-          }
+          // let parentHeader = msg.parent_header as KernelMessage.IHeader;
+          // let owned = parentHeader.session === this.clientId;
+          // if (!owned) {
+          //   this._unhandledIOPubMessage.emit(
+          //     msg as KernelMessage.IIOPubMessage
+          //   );
+          // }
           break;
       }
       // If the message was a status dead message, we might have disposed ourselves.
