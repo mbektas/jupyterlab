@@ -25,6 +25,8 @@ import { DocumentRegistry } from '@jupyterlab/docregistry';
 
 import { NotebookPanel, INotebookModel } from '@jupyterlab/notebook';
 
+import { ISettingRegistry } from '@jupyterlab/coreutils';
+
 import { IDisposable, DisposableDelegate } from '@phosphor/disposable';
 
 import {
@@ -35,14 +37,17 @@ import {
   OutputConsole
 } from '@jupyterlab/outputconsole';
 
+const OUTPUT_CONSOLE_PLUGIN_ID = '@jupyterlab/outputconsole-extension:plugin';
+
 /**
  * The Output Console extension.
  */
 const outputConsolePlugin: JupyterFrontEndPlugin<IOutputConsole> = {
   activate: activateOutputConsole,
-  id: '@jupyterlab/outputconsole-extension:plugin',
+  id: OUTPUT_CONSOLE_PLUGIN_ID,
   provides: IOutputConsole,
   requires: [IMainMenu, ICommandPalette, IRenderMimeRegistry],
+  optional: [ISettingRegistry],
   autoStart: true
 };
 
@@ -186,7 +191,8 @@ function activateOutputConsole(
   app: JupyterFrontEnd,
   mainMenu: IMainMenu,
   palette: ICommandPalette,
-  rendermime: IRenderMimeRegistry
+  rendermime: IRenderMimeRegistry,
+  settingRegistry: ISettingRegistry | null
 ): IOutputConsole {
   const outputConsoleWidget = new OutputConsoleWidget(rendermime);
 
@@ -317,6 +323,30 @@ function activateOutputConsole(
     'Notebook',
     new NotebookToolbarButtonExtension()
   );
+
+  if (settingRegistry) {
+    const updateSettings = (settings: ISettingRegistry.ISettings): void => {
+      const maxLogEntries = settings.get('maxLogEntries').composite as number;
+      const limitLowered =
+        maxLogEntries < outputConsoleWidget.outputConsole.messageLimit;
+      outputConsoleWidget.outputConsole.messageLimit = maxLogEntries;
+
+      if (limitLowered) {
+        outputConsoleWidget.updateListView(outputConsoleWidget.lastFilter);
+      }
+    };
+
+    Promise.all([settingRegistry.load(OUTPUT_CONSOLE_PLUGIN_ID), app.restored])
+      .then(([settings]) => {
+        updateSettings(settings);
+        settings.changed.connect(settings => {
+          updateSettings(settings);
+        });
+      })
+      .catch((reason: Error) => {
+        console.error(reason.message);
+      });
+  }
 
   return outputConsoleWidget.outputConsole;
 }

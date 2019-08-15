@@ -113,6 +113,7 @@ export class OutputConsole implements IOutputConsole {
    */
   logMessage(payload: IOutputLogPayload) {
     this._messages.push(payload);
+    this._applyMessageLimit();
 
     this._signals.forEach(signal => {
       signal.emit(payload);
@@ -171,6 +172,34 @@ export class OutputConsole implements IOutputConsole {
   }
 
   /**
+   * Sets message entry limit.
+   */
+  set messageLimit(limit: number) {
+    if (limit > 0) {
+      this._messageLimit = limit;
+      this._applyMessageLimit();
+    }
+  }
+
+  /**
+   * Returns message entry limit.
+   */
+  get messageLimit(): number {
+    return this._messageLimit;
+  }
+
+  /**
+   * Apply message entry limit to message list.
+   */
+  private _applyMessageLimit() {
+    if (this._messages.length > this._messageLimit) {
+      this._messages = this._messages.slice(
+        this._messages.length - this._messageLimit
+      );
+    }
+  }
+
+  /**
    * Applies filter to a log message.
    * Returns true if message passes the filter.
    */
@@ -205,6 +234,7 @@ export class OutputConsole implements IOutputConsole {
   }
 
   private _messages: IOutputLogPayload[] = [];
+  private _messageLimit: number = 1000;
   private _signals: Map<
     string,
     Signal<IOutputConsole, IOutputLogPayload>
