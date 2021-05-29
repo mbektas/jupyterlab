@@ -168,19 +168,19 @@ describe('Table of Contents', () => {
 
   test('Close Notebook', async () => {
     await galata.notebook.activate(fileName);
-    await galata.notebook.save();
-    await galata.notebook.close();
+    // await galata.notebook.save();
+    await galata.notebook.close(false);
 
     // close save prompt
-    const dialogSelector = '.jp-Dialog .jp-Dialog-content';
-    const dialog = await galata.context.page.$(dialogSelector);
-    if (dialog) {
-      const okButton = await dialog.$('button.jp-mod-accept');
-      if (okButton) {
-          await okButton.click();
-      }
-      await galata.context.page.waitForSelector(dialogSelector, { state: 'hidden' });
-    }
+    // const dialogSelector = '.jp-Dialog .jp-Dialog-content';
+    // const dialog = await galata.context.page.$(dialogSelector);
+    // if (dialog) {
+    //   const okButton = await dialog.$('button.jp-mod-accept');
+    //   if (okButton) {
+    //       await okButton.click();
+    //   }
+    //   await galata.context.page.waitForSelector(dialogSelector, { state: 'hidden' });
+    // }
 
     // const tab = await galata.activity.getTab();
 
