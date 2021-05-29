@@ -168,7 +168,7 @@ describe('Table of Contents', () => {
 
   test('Close Notebook', async () => {
     await galata.notebook.activate(fileName);
-    await galata.notebook.close(true);
+    await galata.notebook.close();
   });
 
   test('Open home directory', async () => {
