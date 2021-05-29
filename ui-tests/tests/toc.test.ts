@@ -168,26 +168,27 @@ describe('Table of Contents', () => {
 
   test('Close Notebook', async () => {
     await galata.notebook.activate(fileName);
-    // await galata.notebook.close();
+    await galata.notebook.save();
+    await galata.notebook.close(); 
 
-    const tab = await galata.activity.getTab();
+    // const tab = await galata.activity.getTab();
 
-    if (!tab) {
-      console.log('NO TAB');
-    }
+    // if (!tab) {
+    //   console.log('NO TAB');
+    // }
 
-    await galata.capture.screenshot('before-revert');
-    if (!await galata.notebook.revertChanges()) {
-      console.log('COULD NOT REVERT');
-    }
-    await galata.capture.screenshot('after-revert');
+    // await galata.capture.screenshot('before-revert');
+    // if (!await galata.notebook.revertChanges()) {
+    //   console.log('COULD NOT REVERT');
+    // }
+    // await galata.capture.screenshot('after-revert');
 
-    const closeIcon = await tab.$('.lm-TabBar-tabCloseIcon');
-    if (!closeIcon) {
-      console.log('NO CLOSE ICON');
-    }
+    // const closeIcon = await tab.$('.lm-TabBar-tabCloseIcon');
+    // if (!closeIcon) {
+    //   console.log('NO CLOSE ICON');
+    // }
 
-    await closeIcon.click();
+    // await closeIcon.click();
   });
 
   test('Open home directory', async () => {
