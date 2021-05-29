@@ -168,8 +168,8 @@ describe('Table of Contents', () => {
 
   test('Close Notebook', async () => {
     await galata.notebook.activate(fileName);
-    await galata.notebook.save();
-    await galata.notebook.close(false);
+    // await galata.notebook.save();
+    await galata.notebook.close();
 
     // // close save prompt
     // const dialogSelector = '.jp-Dialog .jp-Dialog-content';
