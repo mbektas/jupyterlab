@@ -172,6 +172,7 @@ describe('Table of Contents', () => {
   });
 
   test('Open home directory', async () => {
+    await galata.capture.screenshot('after-notebook-close');
     await galata.sidebar.openTab('filebrowser');
     await galata.filebrowser.openHomeDirectory();
   });
