@@ -170,7 +170,6 @@ describe('Table of Contents', () => {
     await galata.notebook.activate(fileName);
     // await galata.notebook.close();
 
-    const page = galata.context.page;
     const tab = await galata.activity.getTab();
 
     if (!tab) {
@@ -192,6 +191,7 @@ describe('Table of Contents', () => {
   });
 
   test('Open home directory', async () => {
+    await galata.capture.screenshot('after-close-btn-click');
     await galata.sidebar.openTab('filebrowser');
     await galata.filebrowser.openHomeDirectory();
   });
