@@ -174,11 +174,13 @@ describe('Table of Contents', () => {
     // close save prompt
     const dialogSelector = '.jp-Dialog .jp-Dialog-content';
     const dialog = await galata.context.page.$(dialogSelector);
-    const okButton = dialog ?? await dialog.$('button.jp-mod-accept');
-    if (okButton) {
-        await okButton.click();
+    if (dialog) {
+      const okButton = await dialog.$('button.jp-mod-accept');
+      if (okButton) {
+          await okButton.click();
+      }
+      await galata.context.page.waitForSelector(dialogSelector, { state: 'hidden' });
     }
-    await galata.context.page.waitForSelector(dialogSelector, { state: 'hidden' });
 
     // const tab = await galata.activity.getTab();
 
