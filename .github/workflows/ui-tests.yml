@@ -53,6 +53,7 @@ jobs:
         pip install ipywidgets
         jlpm
         jlpm build
+        jupyter lab build
 
     - name: Install Galata
       run: |
