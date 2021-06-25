@@ -84,3 +84,21 @@ jobs:
           name: ui-test-output
           path: |
             ui-tests/test-output
+
+      - name: Run UI Tests
+        if: ${{ failure() }}
+        run: |
+          cd ui-tests
+          [ -d "jlab_root" ] && rm -rf jlab_root
+          mkdir jlab_root
+          jlpm run test:create-references
+          rm -rf jlab_root
+          ls
+
+      - name: Upload UI Test new reference artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ui-test-new-reference
+          path: |
+            ui-tests/test-output/test/screenshots/*.png
