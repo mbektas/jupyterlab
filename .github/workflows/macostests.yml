@@ -1,17 +1,17 @@
-name: UI Tests
+name: macOS Tests
 
 on: [push, pull_request]
 
 jobs:
-  ui-tests:
-    name: Visual Regression
-    runs-on: ubuntu-latest
+  macostests:
+    name: macOS
     strategy:
       matrix:
-        group: [ui-tests]
+        group: [integrity, python, usage, usage2]
         python: [3.8]
       fail-fast: false
-
+    timeout-minutes: 45
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -23,6 +23,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12.x'
+
+      - name: Setup firefox
+        uses: browser-actions/setup-firefox@latest
 
       - name: Cache pip on Linux
         uses: actions/cache@v2
@@ -45,60 +48,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      - name: Cache checked links build
+        uses: actions/cache@v2
+        if: ${{ matrix.group == 'linkcheck' }}
+        with:
+          path: ~/.cache/pytest-link-check
+          key: ${{ runner.os }}-linkcheck-${{ hashFiles('**/*.rst') }}-changelog
+          restore-keys: |
+            ${{ runner.os }}-linkcheck-
+
       - name: Install dependencies
         env:
           GROUP: ${{ matrix.group }}
         run: |
           bash ./scripts/ci_install.sh
-          jlpm
-          jlpm build
-          jupyter lab build
 
-      - name: Install Galata
+      - name: Run test ${{ matrix.group }}
+        env:
+          GROUP: ${{ matrix.group }}
+          JLAB_BROWSER_TYPE: webkit
         run: |
-          cd ui-tests
-          jlpm install --frozen-lockfile
-
-      - name: Launch JupyterLab
-        run: |
-          cd ui-tests
-          mkdir jlab_root
-          jlpm run start-jlab:detached
-
-      - name: Wait for JupyterLab
-        uses: ifaxity/wait-on-action@v1
-        with:
-          resource: http-get://localhost:8888/api
-          timeout: 20000
-
-      - name: Run UI Tests
-        run: |
-          cd ui-tests
-          jlpm run test
-          rm -rf jlab_root
-
-      - name: Upload UI Test artifacts
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: ui-test-output
-          path: |
-            ui-tests/test-output
-
-      - name: Run UI Tests
-        if: ${{ failure() }}
-        run: |
-          cd ui-tests
-          [ -d "jlab_root" ] && rm -rf jlab_root
-          mkdir jlab_root
-          jlpm run test:create-references
-          rm -rf jlab_root
-          ls
-
-      - name: Upload UI Test new reference artifacts
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: ui-test-new-reference
-          path: |
-            ui-tests/test-output/test/screenshots/*.png
+          bash ./scripts/ci_script.sh
